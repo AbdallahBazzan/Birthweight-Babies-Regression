@@ -1,2 +1,715 @@
 # Birthweight-Babies-Regression
 This is a regression done on the factors affecting the birthweights of new borns
+# importing libraries
+import pandas as pd                   # data science essentials
+import matplotlib.pyplot as plt       # essential graphical output
+import seaborn as sns                 # enhanced graphical output
+import statsmodels.formula.api as smf # regression modeling
+
+# setting pandas print options
+pd.set_option('display.max_rows', 500)
+pd.set_option('display.max_columns', 500)
+pd.set_option('display.width', 1000)
+
+
+# specifying file name
+file = "./birthweight_low.xlsx"
+
+
+# reading the file into Python
+birthweight = pd.read_excel(io = file)
+
+# outputting the first ten rows of the dataset
+birthweight.head(n=10)
+
+ #formatting and printing the dimensions of the dataset
+print(f"""
+Size of Original Dataset
+------------------------
+Observations: {birthweight.shape[0]}
+Features:     {birthweight.shape[1]}
+""")
+
+#looping to print column names one by one
+for column in birthweight:
+    print(column)
+
+# INFOrmation about each variable
+birthweight.info()
+
+# developing a histogram using HISTPLOT
+sns.histplot(data  = birthweight,
+             x     = "bwght",
+            kde    = True)
+
+
+# title and axis labels
+plt.title(label   = "Original Distribution of Birthweights")
+plt.xlabel(xlabel = "Birthweights ") # avoiding using dataset labels
+plt.ylabel(ylabel = "Count")
+
+
+# displaying the histogram
+plt.show()
+#if you want to remove skewness we do logarithmic for sale price to condense the skewness
+
+# descriptive statistics for numeric data
+birthweight.describe(include = 'number').round(decimals=2)
+
+CONTINUOUS
+----------
+
+mage, fage, bwght (Y-variable)
+
+INTERVAL/COUNT
+--------------
+meduc, monpre, npvis, feduc, omaps, fmaps, male,cigs, drink
+
+CATEGORICAL/OTHER
+-----------------
+mwhte,mblck,moth,fwhte,fblck, foth
+
+
+#creating a copy of my dataframe
+copy_birthweight = pd.DataFrame.copy(birthweight)
+
+# creating a list of continuous features (including Birthweight)
+correlation_data = ["mage","meduc","monpre","npvis","fage","feduc","omaps","fmaps","cigs","drink",
+                  "male","mwhte","mblck","moth","fwhte","fblck","foth","bwght"]
+    
+# developing a correlation matrix based on continuous features
+birthweight_corr = copy_birthweight[correlation_data].corr(method = 'pearson')
+
+
+# filtering the results to only show correlations with Sale_Price
+birthweight_corr.loc[ : , correlation_data].round(decimals = 2).sort_values(ascending = False,
+                                                                     by ="bwght")
+
+#Developing scatter plot for birthweight and highest correlation
+# setting figure size
+fig, ax = plt.subplots(figsize = (9, 6))
+
+
+# developing a scatterplot
+sns.scatterplot(x    = "drink",
+                y    = "bwght",
+                data = birthweight)
+
+
+# SHOWing the results
+plt.show()
+#Second correlation
+fig, ax = plt.subplots(figsize = (9, 6))
+
+
+# developing a scatterplot
+sns.scatterplot(x    = "cigs",
+                y    = "bwght",
+                data = birthweight)
+
+
+# SHOWing the results
+plt.show()
+
+# developing a histogram using HISTPLOT
+sns.histplot(data  = birthweight,
+             x     = "bwght",
+            kde    = True)
+
+
+# title and axis labels
+plt.title(label   = "Original Distribution of Birthweights")
+plt.xlabel(xlabel = "Birthweights ") # avoiding using dataset labels
+plt.ylabel(ylabel = "Count")
+
+
+# displaying the histogram
+plt.show()
+
+birthweight['bwght'].skew() 
+#the skewness is -0.66 and it is high if it is greater than one
+#I don't need to do log transform for the birthweights because the skewness is not high
+
+#Doing histograms for continuous data which are mage,fage,cigs,drinks to check for skewness
+#if skewness is high then log transform..
+
+# using histograms to check features for skewness
+sns.histplot(data   = birthweight,
+             x      = 'mage',
+             kde    = True)
+
+# rendering the plot and printing its skewness to check if above 1
+plt.show()
+
+# repeating for other features to plot histogram and check for skewness
+sns.histplot(data   = birthweight,
+             x      = 'fage',
+             kde    = True)
+
+# rendering the plot and printing its skewness to check if above 1
+plt.show()
+
+#repeating..
+sns.histplot(data   = birthweight,
+             x      = 'cigs',
+             kde    = True)
+
+# rendering the plot and printing its skewness to check if above 1
+plt.show()
+
+#repeating..
+sns.histplot(data   = birthweight,
+             x      = 'drink',
+             kde    = True)
+
+# rendering the plot and printing its skewness to check if above 1
+plt.show()
+
+#Checking the skewness for mage,fage,cigs, drink
+skew_mage = birthweight['mage'].skew()
+skew_fage = birthweight['fage'].skew()
+skew_cigs = birthweight['cigs'].skew()
+skew_drink =birthweight['drink'].skew()
+print(f"""The skewness of mage is {skew_mage}
+The skewness of fage is {skew_fage}
+The skewness of cigs is {skew_cigs}
+The skewness of drink is {skew_drink}""")
+
+# log transforming mother's age, and father's age and saving it to the dataset
+birthweight['log_mage'] = np.log(birthweight['mage'])
+print(birthweight['log_mage'].skew())
+birthweight['log_fage'] = np.log(birthweight['fage'])
+print(birthweight['log_fage'].skew())
+
+#Since I now have a better skewness for mother's age and father's age, I will plot to see the histogram
+# developing a histogram using HISTPLOT
+sns.histplot(data  = birthweight,
+             x     = "log_mage",
+            kde    = True)
+
+# displaying the histogram
+plt.show()
+sns.histplot(data  = birthweight,
+             x     = "log_fage",
+            kde    = True)
+
+# displaying the histogram
+plt.show()
+
+# Checking the new correlations with log transform
+birthweight.corr().loc['bwght',['mage','fage','log_mage','log_fage']].round(decimals = 3)
+
+
+#counting valuecounts for cigs and drinks
+birthweight['cigs'].value_counts().sum(axis = 0)
+# 196 values meaning cannot use 100 rule of flag features...
+
+#I am leaving the log columns for further use in the model for having best R squared and p value..
+# taking the housing dataset
+# and then
+# transforming it into boolean based on if a value is null
+# and then
+# summing together the results per column
+birthweight.isnull().sum(axis = 0)
+
+# looping to detect features with missing values
+for col in birthweight:
+
+    # creating columns with 1s if missing and 0 if not
+    if birthweight[col].isnull().astype(int).sum() > 0:
+        birthweight['m_'+col] = birthweight[col].isnull().astype(int)
+
+
+# summing the missing value flags to check the results of the loop above
+birthweight[    ['m_meduc', 'm_npvis',
+             'm_feduc']    ].sum(axis = 0)
+
+# creating a dropped dataset to visualize 'feduc'
+df_dropped = birthweight.dropna()
+
+
+# displaying the plot for 'Mas Vnr Area'
+sns.histplot(x = 'feduc',
+            data = df_dropped,
+            kde = True)
+
+
+# title and labels
+plt.title('Distribution of Fathers Education')
+
+
+# displaying the plot
+plt.show()
+
+birthweight.columns
+
+print(birthweight.isnull().any(axis = 0).any())
+
+#imputing with the median for feduc and npvis would be a good idea since the the data is skewed > 1
+#imputing with the mean for meduc
+
+feduc_median = birthweight['feduc'].median()
+npvis_median = birthweight['npvis'].median()
+meduc_mean   = birthweight['meduc'].mean()
+
+#filling the missing values
+birthweight['feduc'] = birthweight['feduc'].fillna(feduc_median)
+birthweight['npvis'] = birthweight['npvis'].fillna(npvis_median)
+birthweight['meduc'] = birthweight['meduc'].fillna(meduc_mean)
+
+#printing to check for missing values
+print(birthweight.isnull().sum(axis = 0))
+
+#printing to see for null values
+print(birthweight.isnull().any(axis = 0).any())
+
+#Working with Interval Data
+# developing a scatterplot
+sns.scatterplot(x    = 'feduc',
+                y    = 'bwght',
+                data = birthweight)
+
+
+# titles and axis labels
+plt.title(label   = 'Scatterplot with Interval Data')
+plt.xlabel(xlabel = 'Fathers education')
+plt.ylabel(ylabel = 'Birthweight')
+
+
+# displaying the plot
+plt.show()
+
+#developing a boxplot
+sns.boxplot(x    = 'feduc',
+            y    = 'bwght',
+            data = birthweight)
+
+
+# titles and axis labels
+plt.title(label   = 'Boxplot with Interval Data')
+plt.xlabel(xlabel = 'Fathers education')
+plt.ylabel(ylabel = 'Birthweight')
+
+
+# displaying the plot
+plt.show()
+
+# I checked the explanatory interval variables that have a higher correlation than the rest
+# the variables are feduc, meduc, male, mwhte, mblck, fblck, foth
+#developing boxplots for interval variables
+
+# developing a boxplot
+sns.boxplot(x    = 'meduc',
+            y    = 'bwght',
+            data = birthweight)
+
+# displaying the plot
+plt.show()
+#repeating for intervals
+# developing a boxplot
+sns.boxplot(x    = 'male',
+            y    = 'bwght',
+            data = birthweight)
+
+# displaying the plot
+plt.show()
+
+# developing a boxplot
+sns.boxplot(x    = 'npvis',
+            y    = 'bwght',
+            data = birthweight)
+
+# displaying the plot
+plt.show()
+
+#log transforming intervals for the median to connect with a straight line
+birthweight['log_feduc'] = np.log(birthweight['feduc'])
+birthweight['log_meduc'] = np.log(birthweight['meduc'])
+birthweight['log_npvis'] = np.log(birthweight['npvis'])
+
+birthweight.corr().loc['bwght',['feduc','meduc','log_feduc',
+                                'log_meduc','npvis','log_npvis']].round(decimals = 3)
+
+#developing a boxplot for log transformed feduc and meduc
+sns.boxplot(x    = birthweight['log_feduc'],
+            y    = birthweight['bwght'],
+            data = birthweight)
+
+
+# titles and axis labels
+plt.title(label   = 'Boxplot with Interval Data')
+plt.xlabel(xlabel = 'log_Fathers_education')
+plt.ylabel(ylabel = 'Birthweight')
+
+
+# displaying the plot
+plt.show()
+#developing a boxplot
+sns.boxplot(x    = birthweight['log_meduc'],
+            y    = birthweight['bwght'],
+            data = birthweight)
+
+
+# titles and axis labels
+plt.title(label   = 'Boxplot with Interval Data')
+plt.xlabel(xlabel = 'log_Mothers_education')
+plt.ylabel(ylabel = 'Birthweight')
+
+
+# displaying the plot
+plt.show()
+#developing a boxplot
+sns.boxplot(x    = birthweight['log_npvis'],
+            y    = birthweight['bwght'],
+            data = birthweight)
+
+
+# titles and axis labels
+plt.title(label   = 'Boxplot with Interval Data')
+plt.xlabel(xlabel = 'log_Number_Prenatal_Visits')
+plt.ylabel(ylabel = 'Birthweight')
+
+
+# displaying the plot
+plt.show()
+
+#Checking correlation for birthweight
+# creating a (Pearson) correlation matrix
+df_corr = birthweight.corr().round(decimals = 2)
+
+# printing (Pearson) correlations with SalePrice
+print(df_corr.loc['bwght'].sort_values(ascending = False))
+
+#Dropping omaps and fmaps and bwght from my model for explanatory variables
+birthweight_explanatory_1 = birthweight.copy()
+birthweight_explanatory_1 = birthweight_explanatory_1.drop(['omaps',
+                                                        'bwght',
+                                                        'fmaps'], axis = 1)
+#formatting each explanatory variable for statsmodel
+for val in birthweight_explanatory_1:
+    print(f"{val} +")
+
+# building a full model
+
+# blueprinting a model type
+lm_full = smf.ols(formula = """ bwght ~ mage +
+                                        meduc +
+                                        monpre +
+                                        npvis +
+                                        log_fage +
+                                        log_feduc +
+                                        cigs +
+                                        drink +
+                                        male +
+                                        mwhte +
+                                        mblck +
+                                        moth +
+                                        fwhte +
+                                        fblck +
+                                        foth +
+                                        m_meduc +
+                                        m_npvis""",
+                                        data = birthweight)
+# telling Python to run the data through the blueprint
+results_full = lm_full.fit()
+
+
+# printing the results
+results_full.summary()
+
+#Removing explanatory variables for better p values
+
+# blueprinting a model type
+lm_full = smf.ols(formula = """ bwght ~ mage +
+                                        cigs +
+                                        drink +
+                                        mwhte +
+                                        mblck +
+                                        moth +
+                                        fwhte +
+                                        fblck +
+                                        foth""",
+                                        data = birthweight)
+# telling Python to run the data through the blueprint
+results_full = lm_full.fit()
+
+# printing the results
+results_full.summary()
+
+#printing for columns
+print(birthweight.columns)
+
+from sklearn.model_selection import train_test_split # train/test split
+from sklearn.linear_model import LinearRegression # linear regression (scikit-learn)
+# preparing explanatory variable data
+birthweight_data = birthweight.drop(['bwght','omaps','fmaps','mage',
+                                     'log_mage','log_fage','log_npvis','log_feduc',
+                                     'log_meduc','male', 'mwhte','mblck','moth'], axis = 1)
+# preparing response variables
+birthweight_target = birthweight.loc[ : , 'bwght']
+
+# preparing training and testing sets (all letters are lowercase)
+x_train, x_test, y_train, y_test = train_test_split(
+            birthweight_data,
+            birthweight_target,
+            test_size = 0.25,
+            random_state = 219)
+
+# checking the shapes of the datasets
+print(f"""
+Training Data
+-------------
+X-side: {x_train.shape}
+y-side: {y_train.shape}
+
+
+Testing Data
+------------
+X-side: {x_test.shape}
+y-side: {y_test.shape}
+""")
+
+birthweight_data.columns
+
+# declaring set of x-variables
+x_variables = ['fage','cigs','drink',
+               'fwhte','fblck','foth']
+
+
+# looping to make x-variables suitable for statsmodels
+for val in x_variables:
+    print(f"{val} +")
+
+# merging X_train and y_train so that they can be used in statsmodels
+birthweight_train = pd.concat([x_train, y_train], axis = 1)
+
+
+# Step 1: build a model
+lm_best = smf.ols(formula = """bwght ~  fage +
+                                        cigs +
+                                        drink +
+                                        fwhte +
+                                        fblck +
+                                        foth""",
+                                        data = birthweight_train)
+# Step 2: fit the model based on the data
+results = lm_best.fit()
+
+
+
+# Step 3: analyze the summary output
+print(results.summary())
+
+# applying modelin scikit-learn
+
+# preparing x-variables from the OLS model
+ols_data = birthweight.loc[ : , x_variables]
+
+
+# preparing response variable
+birthweight_target = birthweight.loc[ : , 'bwght']
+
+###############################################
+## setting up more than one train-test split ##
+###############################################
+# FULL X-dataset (normal Y)
+x_train_FULL, x_test_FULL, y_train_FULL, y_test_FULL = train_test_split(
+            birthweight_data,     # x-variables
+            birthweight_target,   # y-variable
+            test_size = 0.25,
+            random_state = 219)
+
+
+# OLS p-value x-dataset (normal Y)
+# for OLS look at p values built for limited sample sizes...
+
+x_train_OLS, x_test_OLS, y_train_OLS, y_test_OLS = train_test_split(
+            ols_data,         # x-variables
+            birthweight_target,   # y-variable
+            test_size = 0.25,
+            random_state = 219)
+
+The p-value Approach 
+Doing LinearRegression
+
+#Instantiating a model object
+lr = LinearRegression()
+
+#fitting to the training data
+lr_fit = lr.fit(x_train_OLS, y_train_OLS)
+#predicting on new data
+lr_pred = lr_fit.predict(x_test_OLS)
+
+#Scoring the results
+print('OLS Training Score :', lr.score(x_train_OLS, y_train_OLS).round(4)) # using R squared
+print('OLS Testing Score :', lr.score(x_test_OLS, y_test_OLS).round(4)) #using R squared
+
+lr_train_score = lr.score(x_train_OLS, y_train_OLS).round(4)
+lr_test_score = lr.score(x_test_OLS, y_test_OLS).round(4)
+#displaying and saving the gap between training and testing
+print('OLS Train-Test Gap :' , abs(lr_train_score - lr_test_score).round(4))
+lr_test_gap = abs(lr_train_score - lr_test_score).round(4)
+
+# zipping each feature name to its coefficient
+lr_model_values = zip(birthweight_data[x_variables].columns,
+                      lr_fit.coef_.round(decimals = 2))
+
+
+# setting up a placeholder list to store model features
+lr_model_lst = [('intercept', lr_fit.intercept_.round(decimals = 2))]
+
+
+# printing out each feature-coefficient pair one by one
+for val in lr_model_values:
+    lr_model_lst.append(val)
+    
+
+# checking the results
+for pair in lr_model_lst:
+    print(pair)
+
+import sklearn.linear_model # linear models
+# INSTANTIATING a model object
+lasso_model = sklearn.linear_model.Lasso(alpha = 1.0,
+                                         normalize = True) # default magitude
+
+
+# FITTING to the training data
+lasso_fit = lasso_model.fit(x_train_FULL, y_train_FULL)
+
+
+# PREDICTING on new data
+lasso_pred = lasso_fit.predict(x_test_FULL)
+
+
+# SCORING the results
+print('Lasso Training Score :', lasso_model.score(x_train_FULL, y_train_FULL).round(4))
+print('Lasso Testing Score  :', lasso_model.score(x_test_FULL, y_test_FULL).round(4))
+
+
+## the following code has been provided for you ##
+
+# saving scoring data for future use
+lasso_train_score = lasso_model.score(x_train_FULL, y_train_FULL).round(4) # using R-square
+lasso_test_score  = lasso_model.score(x_test_FULL, y_test_FULL).round(4)   # using R-square
+
+
+# displaying and saving the gap between training and testing
+print('Lasso Train-Test Gap :', abs(lasso_train_score - lasso_test_score).round(4))
+lasso_test_gap = abs(lasso_train_score - lasso_test_score).round(4)
+
+# zipping each feature name to its coefficient
+lasso_model_values = zip(birthweight_data.columns, lasso_fit.coef_.round(decimals = 2))
+
+
+# setting up a placeholder list to store model features
+lasso_model_lst = [('intercept', lasso_fit.intercept_.round(decimals = 2))]
+
+
+# printing out each feature-coefficient pair one by one
+for val in lasso_model_values:
+    lasso_model_lst.append(val)
+    
+
+# checking the results
+for pair in lasso_model_lst:
+    print(pair)
+
+## This code may have to be run more than once ##
+
+# dropping coefficients that are equal to zero
+
+# printing out each feature-coefficient pair one by one
+for feature, coefficient in lasso_model_lst:
+        
+        if coefficient == 0:
+            lasso_model_lst.remove((feature, coefficient))
+
+            
+# checking the results
+for pair in lasso_model_lst:
+    print(pair)
+
+# INSTANTIATING a model object
+ard_model = sklearn.linear_model.ARDRegression()
+
+
+# FITTING the training data
+ard_fit = ard_model.fit(x_train_FULL, y_train_FULL)
+
+
+# PREDICTING on new data
+ard_pred = ard_fit.predict(x_test_FULL)
+
+
+print('Training Score:', ard_model.score(x_train_FULL, y_train_FULL).round(4))
+print('Testing Score :',  ard_model.score(x_test_FULL, y_test_FULL).round(4))
+
+
+# saving scoring data for future use
+ard_train_score = ard_model.score(x_train_FULL, y_train_FULL).round(4)
+ard_test_score  = ard_model.score(x_test_FULL, y_test_FULL).round(4)
+
+
+# displaying and saving the gap between training and testing
+print('ARD Train-Test Gap :', abs(ard_train_score - ard_test_score).round(4))
+ard_test_gap = abs(ard_train_score - ard_test_score).round(4)
+
+# zipping each feature name to its coefficient
+ard_model_values = zip(birthweight_data.columns, ard_fit.coef_.round(decimals = 5))
+
+
+# setting up a placeholder list to store model features
+ard_model_lst = [('intercept', ard_fit.intercept_.round(decimals = 2))]
+
+
+# printing out each feature-coefficient pair one by one
+for val in ard_model_values:
+    ard_model_lst.append(val)
+    
+
+# checking the results
+for pair in ard_model_lst:
+    print(pair)
+
+#comparing results
+
+print(f"""
+Model      Train Score      Test Score                       Train-Test Gap
+-----      -----------      ----------                       --------------
+OLS*        {lr_train_score}            {lr_test_score}                            {lr_test_gap}
+Lasso       {lasso_train_score}           {lasso_test_score}                             {lasso_test_gap}
+ARD         {ard_train_score}           {ard_test_score}                            {ard_test_gap}
+\n
+OLS IS MY FINAL MODEL
+""")
+
+
+# creating a dictionary for model results
+model_performance = {
+    
+    'Model Type'    : ['OLS', 'Lasso', 'ARD'],
+           
+    'Training' : [lr_train_score, lasso_train_score,
+                                   ard_train_score],
+           
+    'Testing'  : [lr_test_score, lasso_test_score,
+                                   ard_test_score],
+                    
+    'Train-Test Gap' : [lr_test_gap, lasso_test_gap,
+                                        ard_test_gap],
+                    
+    'Model Size' : [len(lr_model_lst), len(lasso_model_lst),
+                                    len(ard_model_lst)],
+                    
+    'Model' : [lr_model_lst, lasso_model_lst, ard_model_lst]}
+
+
+# converting model_performance into a DataFrame
+model_performance = pd.DataFrame(model_performance)
+
+
+# sending model results to Excel
+model_performance.to_excel('./linear_model_performance.xlsx',
+                           index = False)
+
